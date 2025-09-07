@@ -64,6 +64,7 @@ st.set_page_config(page_title="Mess Management System", layout="centered")
 st.title("🍽️ Mess Management System")
 
 # Sidebar for navigation
+
 # Admin panel toggle
 st.sidebar.markdown("---")
 admin_mode = False
@@ -72,6 +73,24 @@ if st.sidebar.checkbox("Admin Panel"):
     if admin_pass == "admin123":
         admin_mode = True
         st.sidebar.success("Admin access granted!")
+        # Admin Controls
+        st.sidebar.markdown("### Admin Controls")
+        conn = sqlite3.connect('mess.db')
+        df_admin = pd.read_sql_query('SELECT id, date, student_name, meal_type, food_item, quantity FROM meals', conn)
+        conn.close()
+        if not df_admin.empty:
+            del_id = st.sidebar.selectbox("Delete entry by ID", options=[None]+df_admin['id'].tolist(), key="admin_delete")
+            if del_id:
+                if st.sidebar.button(f"Delete Entry {del_id}", key="admin_delete_btn"):
+                    conn = sqlite3.connect('mess.db')
+                    c = conn.cursor()
+                    c.execute('DELETE FROM meals WHERE id = ?', (del_id,))
+                    conn.commit()
+                    conn.close()
+                    st.sidebar.success(f"Deleted entry with ID {del_id}")
+                    st.rerun()
+        else:
+            st.sidebar.info("No entries to delete.")
     elif admin_pass:
         st.sidebar.error("Incorrect password")
 
