@@ -134,7 +134,18 @@ if section == "Add Meal":
         meal_date = st.date_input("Date", value=date.today())
         student_name = st.text_input("Student Name")
         meal_type = st.selectbox("Meal Type", ["Breakfast", "Lunch", "Dinner"])
-        food_item = st.text_input("Food Item (e.g. Poha, Dal Rice, Paneer)")
+        # Get all food items already used for this date
+        conn = sqlite3.connect('mess.db')
+        c = conn.cursor()
+        c.execute('SELECT food_item, meal_type FROM meals WHERE date = ?', (meal_date.strftime('%Y-%m-%d'),))
+        used_items = c.fetchall()
+        conn.close()
+        # List of all possible food items (customize as needed)
+        all_items = ["Poha", "Dal Rice", "Paneer", "Aloo Paratha", "Idli Sambhar", "Chole Bhature", "Upma", "Dosa", "Rajma Rice", "Mix Veg", "Curd Rice", "Pasta", "Sandwich", "Sabudana Khichdi", "Egg Curry", "Chicken Curry", "Fish Fry", "Veg Biryani", "Kadhi Chawal", "Pav Bhaji", "Other"]
+        # Remove items already used for other meal types on this date
+        used_for_other = [item for item, mtype in used_items if mtype != meal_type]
+        available_items = [item for item in all_items if item not in used_for_other]
+        food_item = st.selectbox("Food Item", available_items, index=0 if available_items else None, key="food_item_select")
         quantity = st.number_input("Quantity", min_value=1, value=1)
         submitted = st.form_submit_button("Add Meal")
         if submitted and student_name and food_item:
