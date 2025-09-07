@@ -43,6 +43,16 @@ st.markdown('''
         font-size: 1.15rem !important;
         text-shadow: 0 1px 2px #000, 0 0px 1px #222;
     }
+    button, .stButton > button {
+        color: #fff !important;
+        background: #0078d4 !important;
+        font-weight: bold !important;
+        text-shadow: 0 1px 2px #000, 0 0px 1px #222;
+        border-radius: 6px !important;
+        border: none !important;
+        letter-spacing: 0.5px;
+        font-size: 1.15rem !important;
+    }
     select, option {
         color: #fff !important;
         background: #222 !important;
