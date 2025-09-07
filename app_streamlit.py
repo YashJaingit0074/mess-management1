@@ -35,22 +35,40 @@ st.markdown('''
     label, .stTextInput label, .stNumberInput label, .stSelectbox label, .stDateInput label, .stForm label, .st-bb, .st-c3, .st-c4, .st-c5, .st-c6, .st-c7, .st-c8, .st-c9, .st-ca, .st-cb, .st-cc, .st-cd, .st-ce, .st-cf, .st-cg, .st-ch, .st-ci, .st-cj, .st-ck, .st-cl, .st-cm, .st-cn, .st-co, .st-cp, .st-cq, .st-cr, .st-cs, .st-ct, .st-cu, .st-cv, .st-cw, .st-cx, .st-cy, .st-cz {
         color: #fff !important;
         font-size: 1.15rem !important;
+        text-shadow: 0 1px 2px #000, 0 0px 1px #222;
     }
     input, select, textarea {
         color: #fff !important;
         background: #222 !important;
         font-size: 1.15rem !important;
+        text-shadow: 0 1px 2px #000, 0 0px 1px #222;
+    }
+    select, option {
+        color: #fff !important;
+        background: #222 !important;
+        font-size: 1.15rem !important;
+        text-shadow: 0 1px 2px #000, 0 0px 1px #222;
+    }
+    @media (max-width: 600px) {
+        body, .stApp, label, input, select, textarea, .stDataFrame, .stTable, .stDataFrame table, .stTable table, .stDataFrame td, .stTable td, .stDataFrame th, .stTable th {
+            font-size: 1.05rem !important;
+        }
+        .stDataFrame, .stTable {
+            font-size: 0.95rem !important;
+        }
     }
     .stDataFrame, .stTable, .stDataFrame table, .stTable table, .stDataFrame td, .stTable td, .stDataFrame th, .stTable th {
         font-size: 1.15rem !important;
         color: #fff !important;
         background: #222 !important;
+        text-shadow: 0 1px 2px #000, 0 0px 1px #222;
     }
     /* Fix calendar visibility and font */
     .stDateInput input, .stDateInput label {
         font-size: 1.15rem !important;
         color: #fff !important;
         background: #222 !important;
+        text-shadow: 0 1px 2px #000, 0 0px 1px #222;
     }
     .stDateInput [data-baseweb="datepicker"] {
         z-index: 9999 !important;
