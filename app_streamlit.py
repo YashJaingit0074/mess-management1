@@ -135,6 +135,16 @@ section = st.sidebar.radio("Go to", ["Add Meal", "Analytics", "All Meals"])
 # Add Meal Section
 if section == "Add Meal":
     st.header("Add Meal Entry (Add to Cart, max 5 items)")
+    import random
+    food_quotes = [
+        'Craving something delicious? Your next meal is just a click away!',
+        'Happiness is only a meal away. Order now and treat yourself!',
+        'Good food, good mood. Go ahead, add to cart!',
+        'Why wait? Satisfy your hunger in style!',
+        'Every meal is a chance to celebrate. Make yours special today!'
+    ]
+    st.markdown(
+        f'> "{random.choice(food_quotes)}"', unsafe_allow_html=True)
     # Use session state for cart
     if 'cart' not in st.session_state:
         st.session_state.cart = []
@@ -161,7 +171,10 @@ if section == "Add Meal":
             duplicate = False
             cart_duplicate = False
         if add_to_cart and student_name and phone_number and food_item:
-            if duplicate or cart_duplicate:
+            valid_phone = phone_number.isdigit() and len(phone_number) == 10
+            if not valid_phone:
+                st.error("Please enter a valid 10-digit Indian phone number.")
+            elif duplicate or cart_duplicate:
                 st.error(f'Not possible to make "{food_item}" for {meal_type} because it is already used for another meal type on this date or in your cart!')
             elif len(st.session_state.cart) >= 5:
                 st.error("You can only add up to 5 items to the cart.")
@@ -188,6 +201,16 @@ if section == "Add Meal":
                           (item['date'], item['student_name'], item['phone_number'], item['meal_type'], item['food_item'], item['quantity']))
             conn.commit()
             conn.close()
+            if len(st.session_state.cart) > 3:
+                big_order_quotes = [
+                    "Wow! That's a feast! Enjoy every bite! 🍽️",
+                    "Big appetite, big happiness! Your order is on its way.",
+                    "You just made our chef's day! Bon appétit!",
+                    "Ordering for the squad? You rock! Enjoy your meal!",
+                    "More than 3 dishes? You deserve a foodie's applause! 👏"
+                ]
+                import random
+                st.info(random.choice(big_order_quotes))
             st.success("All items in cart added!")
             st.session_state.cart = []
             st.rerun()
