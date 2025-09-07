@@ -141,21 +141,33 @@ if section == "Add Meal":
         used_items = c.fetchall()
         conn.close()
         # List of all possible food items (customize as needed)
-        all_items = ["Poha", "Dal Rice", "Paneer", "Aloo Paratha", "Idli Sambhar", "Chole Bhature", "Upma", "Dosa", "Rajma Rice", "Mix Veg", "Curd Rice", "Pasta", "Sandwich", "Sabudana Khichdi", "Egg Curry", "Chicken Curry", "Fish Fry", "Veg Biryani", "Kadhi Chawal", "Pav Bhaji", "Other"]
+        all_items = ["Poha", "Dal Rice", "Paneer", "Aloo Paratha", "Idli Sambhar", "Chole Bhature", "Upma", "Dosa", "Rajma Rice", "Mix Veg", "Curd Rice", "Pasta", "Sandwich", "Sabudana Khichdi", "Egg Curry", "Chicken Curry", "Fish Fry", "Veg Biryani", "Kadhi Chawal", "Pav Bhaji"]
         # Remove items already used for other meal types on this date
         used_for_other = [item for item, mtype in used_items if mtype != meal_type]
         available_items = [item for item in all_items if item not in used_for_other]
-        food_item = st.selectbox("Food Item", available_items, index=0 if available_items else None, key="food_item_select")
+        available_items.append("Custom...")
+        food_item_choice = st.selectbox("Food Item", available_items, index=0 if available_items else None, key=f"food_item_select_{meal_type}_{meal_date}")
+        if food_item_choice == "Custom...":
+            custom_item = st.text_input("Enter custom food item", key=f"custom_item_{meal_type}_{meal_date}")
+            food_item = custom_item.strip()
+        else:
+            food_item = food_item_choice
         quantity = st.number_input("Quantity", min_value=1, value=1)
         submitted = st.form_submit_button("Add Meal")
+        # Prevent duplicate food item for other meal types on this date
+        duplicate = food_item and any((food_item.lower() == item.lower() and mtype != meal_type) for item, mtype in used_items)
         if submitted and student_name and food_item:
-            conn = sqlite3.connect('mess.db')
-            c = conn.cursor()
-            c.execute('INSERT INTO meals (date, student_name, meal_type, food_item, quantity) VALUES (?, ?, ?, ?, ?)',
-                      (meal_date.strftime('%Y-%m-%d'), student_name, meal_type, food_item, quantity))
-            conn.commit()
-            conn.close()
-            st.success("Meal entry added!")
+            if duplicate:
+                st.error(f'"{food_item}" is already used for another meal type on this date!')
+            else:
+                conn = sqlite3.connect('mess.db')
+                c = conn.cursor()
+                c.execute('INSERT INTO meals (date, student_name, meal_type, food_item, quantity) VALUES (?, ?, ?, ?, ?)',
+                          (meal_date.strftime('%Y-%m-%d'), student_name, meal_type, food_item, quantity))
+                conn.commit()
+                conn.close()
+                st.success("Meal entry added!")
+                st.rerun()
 
 # Analytics Section
 elif section == "Analytics":
