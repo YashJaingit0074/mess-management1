@@ -48,6 +48,9 @@ st.markdown('''
         background: #222 !important;
         font-size: 1.15rem !important;
         text-shadow: 0 1px 2px #000, 0 0px 1px #222;
+        font-weight: bold !important;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
     @media (max-width: 600px) {
         body, .stApp, label, input, select, textarea, .stDataFrame, .stTable, .stDataFrame table, .stTable table, .stDataFrame td, .stTable td, .stDataFrame th, .stTable th {
