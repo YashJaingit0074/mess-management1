@@ -7,18 +7,23 @@ from datetime import date
 def init_db():
     conn = sqlite3.connect('mess.db')
     c = conn.cursor()
-    # Add food_item column if not exists
+    # Add phone_number and food_item columns if not exists
     c.execute('''CREATE TABLE IF NOT EXISTS meals (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         date TEXT NOT NULL,
         student_name TEXT NOT NULL,
+        phone_number TEXT NOT NULL,
         meal_type TEXT NOT NULL,
         food_item TEXT,
         quantity INTEGER NOT NULL
     )''')
-    # Try to add food_item column if missing (for old DBs)
+    # Try to add columns if missing (for old DBs)
     try:
         c.execute('ALTER TABLE meals ADD COLUMN food_item TEXT')
+    except Exception:
+        pass
+    try:
+        c.execute('ALTER TABLE meals ADD COLUMN phone_number TEXT NOT NULL DEFAULT ""')
     except Exception:
         pass
     conn.commit()
@@ -129,10 +134,14 @@ section = st.sidebar.radio("Go to", ["Add Meal", "Analytics", "All Meals"])
 
 # Add Meal Section
 if section == "Add Meal":
-    st.header("Add Meal Entry")
-    with st.form("meal_form"):
+    st.header("Add Meal Entry (Add to Cart, max 5 items)")
+    # Use session state for cart
+    if 'cart' not in st.session_state:
+        st.session_state.cart = []
+    with st.form("meal_cart_form"):
         meal_date = st.date_input("Date", value=date.today())
         student_name = st.text_input("Student Name")
+        phone_number = st.text_input("Phone Number (required)")
         meal_type = st.selectbox("Meal Type", ["Breakfast", "Lunch", "Dinner"])
         # Get all food items already used for this date
         conn = sqlite3.connect('mess.db')
@@ -143,21 +152,48 @@ if section == "Add Meal":
         # Only show a blank text input for food item
         food_item = st.text_input("Food Item", key=f"food_item_{meal_type}_{meal_date}").strip()
         quantity = st.number_input("Quantity", min_value=1, value=1)
-        submitted = st.form_submit_button("Add Meal")
-        # Prevent duplicate food item for other meal types on this date
-        duplicate = food_item and any((food_item.lower() == item.lower() and mtype != meal_type) for item, mtype in used_items)
-        if submitted and student_name and food_item:
-            if duplicate:
-                st.error(f'Not possible to make "{food_item}" for {meal_type} because it is already used for another meal type on this date!')
+        add_to_cart = st.form_submit_button("Add to Cart")
+        # Allow duplicate food items only for Lunch and Dinner, not for Breakfast
+        if meal_type == "Breakfast":
+            duplicate = food_item and any((food_item.lower() == item.lower() and mtype != meal_type) for item, mtype in used_items)
+            cart_duplicate = food_item and any((food_item.lower() == item['food_item'].lower() and item['meal_type'] != meal_type) for item in st.session_state.cart)
+        else:
+            duplicate = False
+            cart_duplicate = False
+        if add_to_cart and student_name and phone_number and food_item:
+            if duplicate or cart_duplicate:
+                st.error(f'Not possible to make "{food_item}" for {meal_type} because it is already used for another meal type on this date or in your cart!')
+            elif len(st.session_state.cart) >= 5:
+                st.error("You can only add up to 5 items to the cart.")
             else:
-                conn = sqlite3.connect('mess.db')
-                c = conn.cursor()
-                c.execute('INSERT INTO meals (date, student_name, meal_type, food_item, quantity) VALUES (?, ?, ?, ?, ?)',
-                          (meal_date.strftime('%Y-%m-%d'), student_name, meal_type, food_item, quantity))
-                conn.commit()
-                conn.close()
-                st.success("Meal entry added!")
-                st.rerun()
+                st.session_state.cart.append({
+                    'date': meal_date.strftime('%Y-%m-%d'),
+                    'student_name': student_name,
+                    'phone_number': phone_number,
+                    'meal_type': meal_type,
+                    'food_item': food_item,
+                    'quantity': quantity
+                })
+                st.success(f'Added "{food_item}" to cart!')
+    # Show cart
+    if st.session_state.cart:
+        st.subheader("Cart")
+        for i, item in enumerate(st.session_state.cart):
+            st.write(f"{i+1}. {item['meal_type']} | {item['food_item']} | Qty: {item['quantity']} | {item['student_name']} | {item['phone_number']}")
+        if st.button("Submit Order (Add All)"):
+            conn = sqlite3.connect('mess.db')
+            c = conn.cursor()
+            for item in st.session_state.cart:
+                c.execute('INSERT INTO meals (date, student_name, phone_number, meal_type, food_item, quantity) VALUES (?, ?, ?, ?, ?, ?)',
+                          (item['date'], item['student_name'], item['phone_number'], item['meal_type'], item['food_item'], item['quantity']))
+            conn.commit()
+            conn.close()
+            st.success("All items in cart added!")
+            st.session_state.cart = []
+            st.rerun()
+        if st.button("Clear Cart"):
+            st.session_state.cart = []
+            st.rerun()
 
 # Analytics Section
 elif section == "Analytics":
@@ -185,7 +221,7 @@ elif section == "All Meals":
     if df.empty:
         st.info("No meal entries yet.")
     else:
-        st.dataframe(df[['id','date','student_name','meal_type','food_item','quantity']])
+        st.dataframe(df[['id','date','student_name','phone_number','meal_type','food_item','quantity']])
         if admin_mode:
             # Delete option
             ids = df['id'].tolist()
